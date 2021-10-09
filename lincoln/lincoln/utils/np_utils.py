@@ -73,3 +73,7 @@ def assert_dim(t: np.ndarray,
 
 def softmax(x, axis=None):
     return np.exp(x - logsumexp(x, axis=axis, keepdims=True))
+
+
+def exp_ratios():
+    return None

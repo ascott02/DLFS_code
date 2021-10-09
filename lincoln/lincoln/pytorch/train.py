@@ -11,15 +11,19 @@ from .utils import permute_data
 from .model import PyTorchModel
 
 
+# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+
 class PyTorchTrainer(object):
     def __init__(self,
                  model: PyTorchModel,
                  optim: Optimizer,
-                 criterion: _Loss):
+                 criterion: _Loss,
+                 device: torch.device):
         self.model = model
         self.optim = optim
         self.loss = criterion
         self._check_optim_net_aligned()
+        self.device = device
 
     def _check_optim_net_aligned(self):
         assert self.optim.param_groups[0]['params']\
@@ -66,9 +70,10 @@ class PyTorchTrainer(object):
                 self.model.train()
 
                 for ii, (X_batch, y_batch) in enumerate(batch_generator):
-
                     self.optim.zero_grad()   # zero the gradient buffers
 
+                    X_batch = X_batch.to(self.device)
+                    y_batch = y_batch.to(self.device)
                     output = self.model(X_batch)[0]
 
                     loss = self.loss(output, y_batch)
@@ -86,7 +91,10 @@ class PyTorchTrainer(object):
                 for X_batch, y_batch in train_dataloader:
 
                     self.optim.zero_grad()
-
+                    X_batch = X_batch.to(self.device)
+                    y_batch = y_batch.to(self.device)
+                    
+                    # self.model.to('cpu')
                     output = self.model(X_batch)[0]
 
                     loss = self.loss(output, y_batch)
@@ -98,6 +106,8 @@ class PyTorchTrainer(object):
                         self.model.eval()
                         losses = []
                         for X_batch, y_batch in test_dataloader:
+                            X_batch = X_batch.to(self.device)
+                            y_batch = y_batch.to(self.device)
                             output = self.model(X_batch)[0]
                             loss = self.loss(output, y_batch)
                             losses.append(loss.item())
